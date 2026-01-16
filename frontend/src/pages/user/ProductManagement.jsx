@@ -4,6 +4,7 @@ import UserLayout from '../../components/UserLayout';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import AdminAuthDialog from '../../components/AdminAuthDialog';
 import { useToastContext } from '../../components/AppToast';
+import { useAuth } from '../../contexts/AuthContext';
 import { getProducts, createProduct, updateProduct, deleteProduct, getSuppliers, bulkUpdateProducts, verifyAdminCredentials } from '../../services/api';
 import { exportProducts } from '../../services/api';
 import './ProductManagement.css';
@@ -22,6 +23,7 @@ const ProductManagement = () => {
   const [showAdminAuth, setShowAdminAuth] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
   const { showToast } = useToastContext();
+  const { isAdmin } = useAuth();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -229,10 +231,17 @@ const ProductManagement = () => {
           <h2>Product Management</h2>
           <div className="header-actions">
             <button onClick={handleExport} className="btn btn-secondary">Export CSV</button>
-            <button onClick={() => { setShowForm(true); setEditingProduct(null); resetForm(); }} className="btn btn-primary">
-              + Add Product
-            </button>
+            {isAdmin && (
+              <button onClick={() => { setShowForm(true); setEditingProduct(null); resetForm(); }} className="btn btn-primary">
+                + Add Product
+              </button>
+            )}
           </div>
+          {!isAdmin && (
+            <p className="info-message" style={{ marginTop: '10px', color: '#666', fontSize: '14px' }}>
+              Note: Products can only be added through the Purchase Management page when recording purchases.
+            </p>
+          )}
         </div>
 
         {/* Filters */}

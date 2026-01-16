@@ -108,8 +108,10 @@ export const updateSupplier = async (id, supplierData) => {
   return axios.put(`${API_BASE_URL}/suppliers/${id}`, supplierData);
 };
 
-export const deleteSupplier = async (id) => {
-  return axios.delete(`${API_BASE_URL}/suppliers/${id}`);
+export const deleteSupplier = async (id, adminUsername, adminPassword) => {
+  return axios.delete(`${API_BASE_URL}/suppliers/${id}`, {
+    data: { adminUsername, adminPassword }
+  });
 };
 
 export const getSupplierProducts = async (id) => {

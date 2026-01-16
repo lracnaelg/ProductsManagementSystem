@@ -123,35 +123,83 @@ router.post('/', validateShopAccess, async (req, res) => {
       notes
     }, { transaction });
 
-    // Create purchase items and update product stock
+    // Create purchase items and update/create product stock
     for (const item of items) {
       const unitCost = parseFloat(item.unit_cost);
       const quantity = parseInt(item.quantity);
       const itemTotal = unitCost * quantity;
 
+      let product;
+      
+      // If product_id is provided, use existing product
+      if (item.product_id) {
+        product = await Product.findByPk(item.product_id, { transaction });
+      }
+      
+      // If product doesn't exist but product info is provided, create new product
+      if (!product && item.product_name) {
+        // Check if product with same name already exists in this shop
+        const existingProduct = await Product.findOne({
+          where: {
+            shop_id: shop_id,
+            name: item.product_name
+          },
+          transaction
+        });
+
+        if (existingProduct) {
+          product = existingProduct;
+        } else {
+          // Create new product
+          product = await Product.create({
+            shop_id: shop_id,
+            name: item.product_name,
+            description: item.product_description || '',
+            category: item.product_category || '',
+            cost_price: unitCost,
+            selling_price: parseFloat(item.product_selling_price) || unitCost * 1.5, // Default 50% markup
+            stock: 0, // Will be updated below
+            low_stock_threshold: 10,
+            status: 'active',
+            supplier_id: supplier_id
+          }, { transaction });
+        }
+      }
+
+      if (!product) {
+        await transaction.rollback();
+        return res.status(400).json({ message: 'Product information is required for each item' });
+      }
+
       await PurchaseItem.create({
         purchase_id: purchase.id,
-        product_id: item.product_id,
+        product_id: product.id,
         quantity,
         unit_cost: unitCost,
         total_cost: itemTotal
       }, { transaction });
 
       // Update product stock and cost price
-      const product = await Product.findByPk(item.product_id, { transaction });
-      if (product) {
-        // Calculate new average cost price
-        const currentStock = product.stock || 0;
-        const currentTotalCost = parseFloat(product.cost_price) * currentStock;
-        const newTotalCost = currentTotalCost + itemTotal;
-        const newStock = currentStock + quantity;
-        const newCostPrice = newStock > 0 ? newTotalCost / newStock : unitCost;
+      // Calculate new average cost price
+      const currentStock = product.stock || 0;
+      const currentTotalCost = parseFloat(product.cost_price) * currentStock;
+      const newTotalCost = currentTotalCost + itemTotal;
+      const newStock = currentStock + quantity;
+      const newCostPrice = newStock > 0 ? newTotalCost / newStock : unitCost;
 
-        await product.update({
-          stock: newStock,
-          cost_price: newCostPrice.toFixed(2)
-        }, { transaction });
+      // Update product with new stock and cost price
+      // Also update selling price if provided for new products
+      const updateData = {
+        stock: newStock,
+        cost_price: newCostPrice.toFixed(2)
+      };
+
+      // If this is a new product and selling price was provided, update it
+      if (item.product_selling_price && (!item.product_id || product.selling_price === 0)) {
+        updateData.selling_price = parseFloat(item.product_selling_price);
       }
+
+      await product.update(updateData, { transaction });
     }
 
     await transaction.commit();

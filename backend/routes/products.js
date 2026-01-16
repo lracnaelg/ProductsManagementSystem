@@ -98,9 +98,16 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Create product
+// Create product (admin only - regular users must create products through purchases)
 router.post('/', validateShopAccess, async (req, res) => {
   try {
+    // Only admins can create products directly
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ 
+        message: 'Access denied: Products can only be created through the Purchase Management page. Please record a purchase to add new products.' 
+      });
+    }
+
     const {
       shop_id,
       name,

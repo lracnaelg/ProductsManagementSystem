@@ -2,8 +2,9 @@ import { useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import UserLayout from '../../components/UserLayout';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import AdminAuthDialog from '../../components/AdminAuthDialog';
 import { useToastContext } from '../../components/AppToast';
-import { getSuppliers, createSupplier, updateSupplier, deleteSupplier, getSupplierProducts, getSupplierPurchases } from '../../services/api';
+import { getSuppliers, createSupplier, updateSupplier, deleteSupplier, getSupplierProducts, getSupplierPurchases, verifyAdminCredentials } from '../../services/api';
 import './SupplierManagement.css';
 
 const SupplierManagement = () => {
@@ -17,6 +18,8 @@ const SupplierManagement = () => {
   const [supplierPurchases, setSupplierPurchases] = useState(null);
   const [error, setError] = useState('');
   const [confirmDialog, setConfirmDialog] = useState({ show: false, message: '', onConfirm: null, title: '' });
+  const [showAdminAuth, setShowAdminAuth] = useState(false);
+  const [supplierToDelete, setSupplierToDelete] = useState(null);
   const { showToast } = useToastContext();
 
   const [formData, setFormData] = useState({
@@ -93,24 +96,31 @@ const SupplierManagement = () => {
   };
 
   const handleDelete = (id, name) => {
-    setConfirmDialog({
-      show: true,
-      title: 'Delete Supplier',
-      message: `Are you sure you want to delete supplier "${name}"? This action cannot be undone.`,
-      onConfirm: async () => {
-        try {
-          await deleteSupplier(id);
-          loadSuppliers();
-          setConfirmDialog({ show: false });
-          showToast('Supplier deleted successfully', 'success');
-        } catch (error) {
-          showToast(error.response?.data?.message || 'Error deleting supplier', 'error');
-          setConfirmDialog({ show: false });
-        }
-      },
-      confirmText: 'Delete',
-      danger: true
-    });
+    setSupplierToDelete({ id, name });
+    setShowAdminAuth(true);
+  };
+
+  const handleAdminAuthConfirm = async (username, password) => {
+    try {
+      // Verify admin credentials first
+      await verifyAdminCredentials(username, password);
+      
+      // If verification successful, delete the supplier
+      await deleteSupplier(supplierToDelete.id, username, password);
+      
+      // Close dialogs and reload suppliers
+      setShowAdminAuth(false);
+      setSupplierToDelete(null);
+      loadSuppliers();
+      showToast('Supplier deleted successfully', 'success');
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to delete supplier. Please verify admin credentials.');
+    }
+  };
+
+  const handleAdminAuthClose = () => {
+    setShowAdminAuth(false);
+    setSupplierToDelete(null);
   };
 
   const handleViewDetails = async (supplier) => {
@@ -331,6 +341,13 @@ const SupplierManagement = () => {
           confirmText={confirmDialog.confirmText || 'Confirm'}
           cancelText="Cancel"
           danger={confirmDialog.danger}
+        />
+
+        <AdminAuthDialog
+          show={showAdminAuth}
+          onClose={handleAdminAuthClose}
+          onConfirm={handleAdminAuthConfirm}
+          message={`Please enter admin credentials to delete supplier "${supplierToDelete?.name}". This action cannot be undone.`}
         />
       </div>
     </UserLayout>

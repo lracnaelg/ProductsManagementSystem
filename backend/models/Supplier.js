@@ -24,10 +24,8 @@ export const Supplier = sequelize.define('Supplier', {
   },
   email: {
     type: DataTypes.STRING(255),
-    allowNull: true,
-    validate: {
-      isEmail: true
-    }
+    allowNull: true
+    // No validation here - handled in route
   },
   address: {
     type: DataTypes.TEXT,

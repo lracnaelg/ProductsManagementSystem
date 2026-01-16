@@ -19,7 +19,16 @@ const PurchaseManagement = () => {
 
   const [formData, setFormData] = useState({
     supplier_id: '',
-    items: [{ product_id: '', quantity: '', unit_cost: '' }],
+    items: [{ 
+      product_id: '', 
+      product_name: '', 
+      product_category: '', 
+      product_description: '', 
+      product_selling_price: '', 
+      quantity: '', 
+      unit_cost: '',
+      isNewProduct: false
+    }],
     shipping_cost: '',
     fees: '',
     purchase_date: new Date().toISOString().split('T')[0],
@@ -72,7 +81,14 @@ const PurchaseManagement = () => {
     setError('');
 
     // Validate items
-    const validItems = formData.items.filter(item => item.product_id && item.quantity && item.unit_cost);
+    const validItems = formData.items.filter(item => {
+      if (item.isNewProduct) {
+        return item.product_name && item.quantity && item.unit_cost;
+      } else {
+        return item.product_id && item.quantity && item.unit_cost;
+      }
+    });
+    
     if (validItems.length === 0) {
       setError('Please add at least one item');
       return;
@@ -82,11 +98,27 @@ const PurchaseManagement = () => {
       const purchaseData = {
         shop_id: parseInt(shopId),
         supplier_id: parseInt(formData.supplier_id),
-        items: validItems.map(item => ({
-          product_id: parseInt(item.product_id),
-          quantity: parseInt(item.quantity),
-          unit_cost: parseFloat(item.unit_cost)
-        })),
+        items: validItems.map(item => {
+          const baseItem = {
+            quantity: parseInt(item.quantity),
+            unit_cost: parseFloat(item.unit_cost)
+          };
+          
+          if (item.isNewProduct) {
+            return {
+              ...baseItem,
+              product_name: item.product_name,
+              product_category: item.product_category || '',
+              product_description: item.product_description || '',
+              product_selling_price: item.product_selling_price || ''
+            };
+          } else {
+            return {
+              ...baseItem,
+              product_id: parseInt(item.product_id)
+            };
+          }
+        }),
         shipping_cost: parseFloat(formData.shipping_cost) || 0,
         fees: parseFloat(formData.fees) || 0,
         purchase_date: formData.purchase_date || new Date().toISOString(),
@@ -97,7 +129,16 @@ const PurchaseManagement = () => {
       setShowForm(false);
       setFormData({
         supplier_id: '',
-        items: [{ product_id: '', quantity: '', unit_cost: '' }],
+        items: [{ 
+          product_id: '', 
+          product_name: '', 
+          product_category: '', 
+          product_description: '', 
+          product_selling_price: '', 
+          quantity: '', 
+          unit_cost: '',
+          isNewProduct: false
+        }],
         shipping_cost: '',
         fees: '',
         purchase_date: new Date().toISOString().split('T')[0],
@@ -115,7 +156,16 @@ const PurchaseManagement = () => {
   const addItem = () => {
     setFormData({
       ...formData,
-      items: [...formData.items, { product_id: '', quantity: '', unit_cost: '' }]
+      items: [...formData.items, { 
+        product_id: '', 
+        product_name: '', 
+        product_category: '', 
+        product_description: '', 
+        product_selling_price: '', 
+        quantity: '', 
+        unit_cost: '',
+        isNewProduct: false
+      }]
     });
   };
 
@@ -135,7 +185,21 @@ const PurchaseManagement = () => {
       const product = products.find(p => p.id === parseInt(value));
       if (product) {
         newItems[index].unit_cost = product.cost_price || '';
+        newItems[index].isNewProduct = false;
       }
+    }
+    
+    // If switching to new product mode, clear product_id
+    if (field === 'isNewProduct' && value === true) {
+      newItems[index].product_id = '';
+    }
+    
+    // If switching to existing product mode, clear new product fields
+    if (field === 'isNewProduct' && value === false) {
+      newItems[index].product_name = '';
+      newItems[index].product_category = '';
+      newItems[index].product_description = '';
+      newItems[index].product_selling_price = '';
     }
     
     setFormData({ ...formData, items: newItems });
@@ -270,43 +334,112 @@ const PurchaseManagement = () => {
 
                   {formData.items.map((item, index) => (
                     <div key={index} className="item-row">
-                      <select
-                        value={item.product_id}
-                        onChange={(e) => updateItem(index, 'product_id', e.target.value)}
-                        required
-                        className="item-select"
-                      >
-                        <option value="">Select Product</option>
-                        {products.map(product => (
-                          <option key={product.id} value={product.id}>{product.name}</option>
-                        ))}
-                      </select>
-                      <input
-                        type="number"
-                        min="1"
-                        placeholder="Qty"
-                        value={item.quantity}
-                        onChange={(e) => updateItem(index, 'quantity', e.target.value)}
-                        required
-                        className="item-input"
-                      />
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        placeholder="Unit Cost"
-                        value={item.unit_cost}
-                        onChange={(e) => updateItem(index, 'unit_cost', e.target.value)}
-                        required
-                        className="item-input"
-                      />
+                      <div className="item-product-selector">
+                        <label>
+                          <input
+                            type="radio"
+                            checked={!item.isNewProduct}
+                            onChange={() => updateItem(index, 'isNewProduct', false)}
+                          />
+                          Existing Product
+                        </label>
+                        <label>
+                          <input
+                            type="radio"
+                            checked={item.isNewProduct}
+                            onChange={() => updateItem(index, 'isNewProduct', true)}
+                          />
+                          New Product
+                        </label>
+                      </div>
+                      
+                      {!item.isNewProduct ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                          <label style={{ fontSize: '0.85rem', color: '#666', fontWeight: '500' }}>Select Product *</label>
+                          <select
+                            value={item.product_id}
+                            onChange={(e) => updateItem(index, 'product_id', e.target.value)}
+                            required
+                            className="item-select"
+                          >
+                            <option value="">Choose an existing product...</option>
+                            {products.map(product => (
+                              <option key={product.id} value={product.id}>{product.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                      ) : (
+                        <div className="new-product-fields">
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                            <label style={{ fontSize: '0.85rem', color: '#666', fontWeight: '500' }}>Product Name *</label>
+                            <input
+                              type="text"
+                              placeholder="Enter product name"
+                              value={item.product_name}
+                              onChange={(e) => updateItem(index, 'product_name', e.target.value)}
+                              required
+                              className="item-input"
+                            />
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                            <label style={{ fontSize: '0.85rem', color: '#666', fontWeight: '500' }}>Category</label>
+                            <input
+                              type="text"
+                              placeholder="e.g., Electronics"
+                              value={item.product_category}
+                              onChange={(e) => updateItem(index, 'product_category', e.target.value)}
+                              className="item-input"
+                            />
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                            <label style={{ fontSize: '0.85rem', color: '#666', fontWeight: '500' }}>Selling Price</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              placeholder="Auto: 50% markup"
+                              value={item.product_selling_price}
+                              onChange={(e) => updateItem(index, 'product_selling_price', e.target.value)}
+                              className="item-input"
+                            />
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div className="item-input-row">
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                          <label style={{ fontSize: '0.85rem', color: '#666', fontWeight: '500' }}>Quantity *</label>
+                          <input
+                            type="number"
+                            min="1"
+                            placeholder="Enter quantity"
+                            value={item.quantity}
+                            onChange={(e) => updateItem(index, 'quantity', e.target.value)}
+                            required
+                            className="item-input"
+                          />
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                          <label style={{ fontSize: '0.85rem', color: '#666', fontWeight: '500' }}>Unit Cost *</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            placeholder="Enter unit cost"
+                            value={item.unit_cost}
+                            onChange={(e) => updateItem(index, 'unit_cost', e.target.value)}
+                            required
+                            className="item-input"
+                          />
+                        </div>
+                      </div>
                       {formData.items.length > 1 && (
                         <button
                           type="button"
                           onClick={() => removeItem(index)}
-                          className="btn btn-sm btn-delete"
+                          className="btn btn-sm btn-delete remove-item-btn"
                         >
-                          Remove
+                          Remove Item
                         </button>
                       )}
                     </div>
@@ -357,7 +490,16 @@ const PurchaseManagement = () => {
                     setShowForm(false);
                     setFormData({
                       supplier_id: '',
-                      items: [{ product_id: '', quantity: '', unit_cost: '' }],
+                      items: [{ 
+                        product_id: '', 
+                        product_name: '', 
+                        product_category: '', 
+                        product_description: '', 
+                        product_selling_price: '', 
+                        quantity: '', 
+                        unit_cost: '',
+                        isNewProduct: false
+                      }],
                       shipping_cost: '',
                       fees: '',
                       purchase_date: new Date().toISOString().split('T')[0],

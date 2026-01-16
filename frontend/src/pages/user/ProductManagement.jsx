@@ -459,15 +459,24 @@ const ProductManagement = () => {
                       
                       <div className="product-image-wrapper">
                         {product.image_url ? (
-                          <img 
-                            src={product.image_url} 
-                            alt={product.name} 
-                            className="product-image"
-                            onError={(e) => {
-                              e.target.style.display = 'none';
-                              e.target.nextSibling.style.display = 'flex';
-                            }}
-                          />
+                          <>
+                            <img 
+                              src={product.image_url} 
+                              alt={product.name} 
+                              className="product-image"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'flex';
+                              }}
+                            />
+                            <div className="product-image-hover">
+                              <img 
+                                src={product.image_url} 
+                                alt={product.name} 
+                                className="product-image-full"
+                              />
+                            </div>
+                          </>
                         ) : null}
                         <div className="product-image-placeholder" style={{ display: product.image_url ? 'none' : 'flex' }}>
                           <span>{product.name.charAt(0).toUpperCase()}</span>

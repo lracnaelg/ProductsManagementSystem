@@ -11,7 +11,6 @@ All pages are now fully functional with complete CRUD operations, analytics, and
 - ✅ Shop selection for users (before login)
 - ✅ JWT token authentication
 - ✅ Protected routes
-
 ### Admin Features
 - ✅ Admin Dashboard
 - ✅ Shop Management (Create, Edit, Delete shops)

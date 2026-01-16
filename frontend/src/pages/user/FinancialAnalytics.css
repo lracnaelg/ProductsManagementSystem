@@ -1,0 +1,181 @@
+.financial-analytics {
+  width: 100%;
+}
+
+.page-header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.page-header-section h2 {
+  margin: 0;
+  color: #333;
+}
+
+.period-selector {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.period-selector label {
+  color: #666;
+  font-weight: 500;
+}
+
+.period-select {
+  padding: 8px 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.period-select:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.summary-card {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.summary-card h3 {
+  margin: 0 0 10px 0;
+  color: #666;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.summary-value {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #667eea;
+  margin: 0;
+}
+
+.summary-value.profit {
+  color: #28a745;
+}
+
+.chart-card {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  margin-bottom: 30px;
+}
+
+.chart-card h3 {
+  margin: 0 0 20px 0;
+  color: #333;
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  gap: 30px;
+  margin-bottom: 30px;
+}
+
+.chart-details {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.chart-details p {
+  margin: 8px 0;
+  color: #666;
+}
+
+.margins-table-card {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.margins-table-card h3 {
+  margin: 0 0 20px 0;
+  color: #333;
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+.margins-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.margins-table thead {
+  background: #f8f9fa;
+}
+
+.margins-table th,
+.margins-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.margins-table th {
+  font-weight: 600;
+  color: #333;
+}
+
+.margins-table td {
+  color: #666;
+}
+
+.good-margin {
+  color: #28a745;
+  font-weight: 600;
+}
+
+.ok-margin {
+  color: #ffc107;
+  font-weight: 600;
+}
+
+.low-margin {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.profit-cell {
+  font-weight: 600;
+  color: #667eea;
+}
+
+.no-data {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+}
+
+@media (max-width: 768px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
